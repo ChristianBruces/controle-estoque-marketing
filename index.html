@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ATEM | Controle de Estoque</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Outfit:wght@500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+    <style>
+      /* Aplicação digital da identidade ATEM: vermelho 485, amarelo 116 e neutros claros. */
+      :root { --atem-red: #da291c; --atem-burgundy: #7b1e2b; --atem-yellow: #ffcc00; --atem-ink: #2b2928; }
+      body { background: #f1f1ef; color: var(--atem-ink); }
+      .sidebar, .topbar, .stat-card, .panel, .report-card, .movement-choice { border-color: #dededb; }
+      .sidebar, .topbar, .stat-card, .panel, .report-card, .movement-choice, .filters select, .filter-search { background: #fff; }
+      .brand { height: 86px; padding: 12px 22px; }
+      .brand img { width: 145px; height: 62px; object-fit: contain; object-position: left center; display: block; }
+      .workspace { background: #f6f0f0; color: #7b1e2b; }
+      .workspace-dot { background: var(--atem-yellow); }
+      .nav-item.active { color: #7b1e2b; background: #f8eeee; }
+      .nav-item.active span, .nav-item.active b { color: #7b1e2b; }
+      .nav-item b { background: #f1eeee; color: #7b1e2b; }
+      .btn-primary { background: var(--atem-burgundy); box-shadow: 0 3px 8px #7b1e2b40; }
+      .btn-primary:hover { background: #641522; }
+      .link-btn, .text-export { color: var(--atem-burgundy); }
+      .blue .stat-icon, .report-icon { color: var(--atem-burgundy); background: #f8eeee; }
+      .area-tag { color: #7b1e2b; background: #f8eeee; }
+      .progress i, .bar-group i { background: var(--atem-burgundy); }
+      .chart-legend i { background: var(--atem-burgundy); }
+      .movement-choice.transfer > span { background: #f8eeee; color: var(--atem-burgundy); }
+      .setting-top > span { color: var(--atem-burgundy); background: #f8eeee; }
+      .brand-mark { display: none; }
+      .page-heading h1 span { color: var(--atem-yellow); }
+      .filter-search, .filters select { border-color: #d9d9d5; }
+      .modal { border-top: 4px solid var(--atem-red); }
+      .approve { color: #7b1e2b; background: #f8eeee; }
+    </style>
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar" id="sidebar">
+        <div class="brand"><img src="assets/logo-atem-preferencial.png" alt="ATEM" /></div>
+        <div class="workspace"><span class="workspace-dot"></span><span>ESTOQUE MKT & COMERCIAL</span></div>
+        <nav class="navigation">
+          <button class="nav-item active" data-view="dashboard"><span>▦</span>Visão geral</button>
+          <button class="nav-item" data-view="inventory"><span>◫</span>Materiais <b id="inventoryBadge">0</b></button>
+          <button class="nav-item" data-view="movements"><span>⇄</span>Movimentações</button>
+          <button class="nav-item" data-view="history"><span>◷</span>Histórico</button>
+          <div class="nav-label">GESTÃO</div>
+          <button class="nav-item" data-view="reports"><span>▤</span>Relatórios</button>
+          <button class="nav-item" data-view="settings"><span>⚙</span>Cadastros</button>
+        </nav>
+        <div class="sidebar-footer">
+          <div class="profile-avatar">CS</div><div><strong>Christian Souza</strong><small>Gestor</small></div><span class="more">•••</span>
+        </div>
+      </aside>
+
+      <main class="main-content">
+        <header class="topbar">
+          <button class="menu-toggle" id="menuToggle">☰</button>
+          <div class="search"><span>⌕</span><input id="globalSearch" placeholder="Buscar materiais, códigos ou campanhas..." /></div>
+          <div class="top-actions"><button class="icon-button" title="Notificações">♧<i id="notificationDot"></i></button><button class="help">?</button></div>
+        </header>
+
+        <section class="view active" id="dashboard-view">
+          <div class="page-heading"><div><p class="eyebrow">ESTOQUE CENTRAL</p><h1>Olá, Christian <span>✦</span></h1><p class="subtle">Aqui está o panorama do seu estoque hoje.</p></div><div class="heading-actions"><button class="btn btn-light" id="exportDashboard">↓ Exportar</button><button class="btn btn-primary" data-action="movement">＋ Registrar movimentação</button></div></div>
+          <div class="stats-grid">
+            <article class="stat-card blue"><div class="stat-icon">▣</div><div><span>ITENS CADASTRADOS</span><strong id="totalItems">0</strong><small>em 5 categorias</small></div></article>
+            <article class="stat-card green"><div class="stat-icon">◈</div><div><span>ESTOQUE TOTAL</span><strong id="totalStock">0</strong><small>unidades disponíveis</small></div></article>
+            <article class="stat-card yellow"><div class="stat-icon">⌁</div><div><span>PRECISAM DE ATENÇÃO</span><strong id="attentionCount">0</strong><small>reposição recomendada</small></div></article>
+            <article class="stat-card red"><div class="stat-icon">!</div><div><span>ESTOQUE CRÍTICO</span><strong id="criticalCount">0</strong><small>ação imediata</small></div></article>
+          </div>
+          <div class="dashboard-grid">
+            <section class="panel area-panel"><div class="panel-heading"><div><h2>Estoque por área</h2><p>Distribuição atual por responsável</p></div><button class="link-btn" data-view-link="inventory">Ver materiais →</button></div><div class="area-bars" id="areaBars"></div></section>
+            <section class="panel movement-panel"><div class="panel-heading"><div><h2>Movimentações do mês</h2><p>Entradas e saídas registradas</p></div><select id="monthSelect"><option>Junho 2026</option></select></div><div class="chart-wrap"><div class="chart-y"><span>80</span><span>60</span><span>40</span><span>20</span><span>0</span></div><div class="bar-chart" id="barChart"></div></div><div class="chart-legend"><span><i class="legend-in"></i>Entradas</span><span><i class="legend-out"></i>Saídas</span></div></section>
+          </div>
+          <div class="dashboard-grid lower-grid">
+            <section class="panel alert-panel"><div class="panel-heading"><div><h2>Alertas de reposição <em id="alertTotal">0</em></h2><p>Materiais que exigem acompanhamento</p></div><button class="link-btn" data-view-link="inventory">Ver todos →</button></div><div id="alertsList" class="alert-list"></div></section>
+            <section class="panel recent-panel"><div class="panel-heading"><div><h2>Últimas movimentações</h2><p>Acompanhe o que aconteceu no estoque</p></div><button class="link-btn" data-view-link="history">Ver histórico →</button></div><div id="recentList" class="recent-list"></div></section>
+          </div>
+        </section>
+
+        <section class="view" id="inventory-view">
+          <div class="page-heading"><div><p class="eyebrow">CATÁLOGO</p><h1>Materiais</h1><p class="subtle">Gerencie os itens armazenados no depósito central.</p></div><div class="heading-actions"><button class="btn btn-light" id="downloadTemplate">↓ Modelo de importação</button><button class="btn btn-primary" data-action="item">＋ Novo material</button></div></div>
+          <div class="filters"><div class="filter-search"><span>⌕</span><input id="inventorySearch" placeholder="Buscar por nome ou código" /></div><select id="areaFilter"><option value="">Todas as áreas</option><option>Marketing</option><option>Comercial</option></select><select id="statusFilter"><option value="">Todos os status</option><option value="critical">Crítico</option><option value="attention">Atenção</option><option value="normal">Normal</option></select><button class="btn btn-light" id="clearFilters">Limpar</button></div>
+          <section class="panel table-panel"><div class="table-scroll"><table><thead><tr><th>Material</th><th>Categoria</th><th>Área</th><th>Saldo atual</th><th>Status</th><th>Localização</th><th></th></tr></thead><tbody id="inventoryTable"></tbody></table></div></section>
+        </section>
+
+        <section class="view" id="movements-view">
+          <div class="page-heading"><div><p class="eyebrow">OPERAÇÃO</p><h1>Registrar movimentação</h1><p class="subtle">Entradas e saídas atualizam o saldo e o histórico imediatamente.</p></div></div>
+          <div class="movement-cards"><button class="movement-choice entry" data-movement-type="entry"><span>↓</span><div><strong>Registrar entrada</strong><small>Recebimento de materiais</small></div><b>→</b></button><button class="movement-choice exit" data-movement-type="exit"><span>↑</span><div><strong>Registrar saída</strong><small>Retirada para campanha ou unidade</small></div><b>→</b></button><button class="movement-choice transfer" data-movement-type="transfer"><span>⇄</span><div><strong>Transferir área</strong><small>Alterar responsável pelo material</small></div><b>→</b></button><button class="movement-choice adjust" data-movement-type="adjust"><span>⌘</span><div><strong>Solicitar ajuste</strong><small>Requer aprovação do gestor</small></div><b>→</b></button></div>
+          <section class="panel table-panel"><div class="panel-heading"><div><h2>Movimentações recentes</h2><p>Operações realizadas nos últimos dias</p></div></div><div class="table-scroll"><table><thead><tr><th>Tipo</th><th>Material</th><th>Quantidade</th><th>Responsável</th><th>Data</th><th>Status</th></tr></thead><tbody id="movementTable"></tbody></table></div></section>
+        </section>
+
+        <section class="view" id="history-view"><div class="page-heading"><div><p class="eyebrow">RASTREABILIDADE</p><h1>Histórico completo</h1><p class="subtle">Todas as operações registradas no estoque.</p></div><button class="btn btn-light" id="exportHistory">↓ Exportar Excel</button></div><section class="panel table-panel"><div class="table-scroll"><table><thead><tr><th>Data e hora</th><th>Tipo</th><th>Material</th><th>Quantidade</th><th>Detalhes</th><th>Responsável</th></tr></thead><tbody id="historyTable"></tbody></table></div></section></section>
+
+        <section class="view" id="reports-view"><div class="page-heading"><div><p class="eyebrow">ANÁLISES</p><h1>Relatórios</h1><p class="subtle">Exporte uma visão personalizada do seu estoque.</p></div></div><div class="report-grid"><article class="report-card"><div class="report-icon">▤</div><h2>Posição de estoque</h2><p>Saldo atual por material, categoria e área responsável.</p><button class="btn btn-light report-export" data-report="Estoque">↓ Baixar Excel</button><button class="text-export" data-report="Estoque">Gerar PDF</button></article><article class="report-card"><div class="report-icon green-bg">⇄</div><h2>Movimentações</h2><p>Entradas, saídas, ajustes e transferências por período.</p><button class="btn btn-light report-export" data-report="Movimentações">↓ Baixar Excel</button><button class="text-export" data-report="Movimentações">Gerar PDF</button></article><article class="report-card"><div class="report-icon amber-bg">!</div><h2>Materiais críticos</h2><p>Itens em nível crítico ou que precisam de atenção.</p><button class="btn btn-light report-export" data-report="Críticos">↓ Baixar Excel</button><button class="text-export" data-report="Críticos">Gerar PDF</button></article></div></section>
+
+        <section class="view" id="settings-view"><div class="page-heading"><div><p class="eyebrow">CONFIGURAÇÃO</p><h1>Cadastros</h1><p class="subtle">Estruturas que organizam o controle de estoque.</p></div></div><div class="settings-grid"><article class="panel setting-card"><div class="setting-top"><span>◈</span><div><h2>Áreas responsáveis</h2><p>Marketing, Comercial e futuras áreas.</p></div></div><div class="pill-list"><span>Marketing</span><span>Comercial</span></div><button class="link-btn">Gerenciar áreas →</button></article><article class="panel setting-card"><div class="setting-top"><span>◫</span><div><h2>Categorias</h2><p>Brindes, materiais gráficos e enxovais.</p></div></div><div class="pill-list"><span>Brindes</span><span>Materiais Gráficos</span><span>Enxovais</span></div><button class="link-btn">Gerenciar categorias →</button></article><article class="panel setting-card"><div class="setting-top"><span>✦</span><div><h2>Campanhas</h2><p>Vincule materiais às ações em andamento.</p></div></div><div class="pill-list"><span>Acelera Aí</span><span>Combustível do Bem</span></div><button class="link-btn">Gerenciar campanhas →</button></article></div></section>
+      </main>
+    </div>
+
+    <div class="modal-backdrop" id="modalBackdrop"><div class="modal" id="modal"><button class="modal-close" id="modalClose">×</button><div id="modalContent"></div></div></div>
+    <div class="toast" id="toast"></div>
+    <script src="app.js"></script>
+  </body>
+</html>
