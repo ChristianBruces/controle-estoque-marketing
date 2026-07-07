@@ -136,18 +136,18 @@ security definer
 set search_path = public
 as $$
 declare
-  current_role app_role;
+  v_current_role app_role;
 begin
-  current_role := public.app_current_role();
+  v_current_role := public.app_current_role();
 
-  if current_role is null then
+  if v_current_role is null then
     return false;
   end if;
 
   return case required_role
-    when 'assistant' then current_role in ('assistant', 'analyst', 'manager')
-    when 'analyst' then current_role in ('analyst', 'manager')
-    when 'manager' then current_role = 'manager'
+    when 'assistant' then v_current_role in ('assistant', 'analyst', 'manager')
+    when 'analyst' then v_current_role in ('analyst', 'manager')
+    when 'manager' then v_current_role = 'manager'
   end;
 end;
 $$;
