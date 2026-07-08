@@ -28,19 +28,44 @@
       document.querySelector('.top-actions')?.prepend(box);
     }
 
+    let mobileBox = document.querySelector('#mobileCloudStatus');
+    if (!mobileBox) {
+      mobileBox = document.createElement('div');
+      mobileBox.id = 'mobileCloudStatus';
+      mobileBox.className = 'mobile-cloud-status';
+      document.querySelector('.topbar')?.insertAdjacentElement('afterend', mobileBox);
+    }
+
     if (!cloud()) {
       box.innerHTML = '<span class="offline-dot"></span><span>Modo local</span>';
+      mobileBox.innerHTML = '<div><strong>Modo local</strong><small>Sincronização online indisponível neste momento.</small></div>';
       return;
     }
 
     if (!cloudMode) {
       box.innerHTML = '<span class="offline-dot"></span><button class="link-btn" id="cloudLogin">Entrar para sincronizar</button>';
       document.querySelector('#cloudLogin').onclick = showLoginModal;
+      mobileBox.innerHTML = `
+        <div>
+          <strong>Estoque online</strong>
+          <small>Entre para sincronizar dados entre celular, notebook e equipe.</small>
+        </div>
+        <button class="btn btn-primary" id="mobileCloudLogin">Entrar</button>
+      `;
+      document.querySelector('#mobileCloudLogin').onclick = showLoginModal;
       return;
     }
 
     box.innerHTML = `<span class="online-dot"></span><span>Online · ${roleLabel(cloudProfile?.role)}</span><button class="link-btn" id="cloudLogout">Sair</button>`;
     document.querySelector('#cloudLogout').onclick = signOut;
+    mobileBox.innerHTML = `
+      <div>
+        <strong>Online Â· ${roleLabel(cloudProfile?.role)}</strong>
+        <small>${currentName()}</small>
+      </div>
+      <button class="btn btn-light" id="mobileCloudLogout">Sair</button>
+    `;
+    document.querySelector('#mobileCloudLogout').onclick = signOut;
   }
 
   function renderProfile() {
