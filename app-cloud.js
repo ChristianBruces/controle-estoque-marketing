@@ -19,6 +19,83 @@
   const canManageItems = () => !cloudMode || ['analyst', 'manager'].includes(cloudProfile?.role);
   const canApprove = () => !cloudMode || cloudProfile?.role === 'manager';
 
+  function renderAuthCover() {
+    let cover = document.querySelector('#authCover');
+    if (!cover) {
+      cover = document.createElement('section');
+      cover.id = 'authCover';
+      cover.className = 'auth-cover';
+      document.body.prepend(cover);
+    }
+
+    document.body.classList.toggle('auth-required', !cloudMode);
+
+    if (cloudMode) {
+      cover.innerHTML = '';
+      return;
+    }
+
+    if (!cloud()) {
+      cover.innerHTML = `
+        <div class="auth-cover-left">
+          <div class="auth-logo"><img src="assets/logo-atem-preferencial.png" alt="ATEM"></div>
+          <div class="auth-copy">
+            <p class="eyebrow">ESTOQUE MARKETING & COMERCIAL</p>
+            <h1>Sincronização indisponível</h1>
+            <p>Não foi possível carregar a conexão online. Atualize a página ou tente novamente em instantes.</p>
+          </div>
+        </div>
+        <div class="auth-cover-right"></div>
+      `;
+      return;
+    }
+
+    cover.innerHTML = `
+      <div class="auth-cover-left">
+        <div class="auth-logo"><img src="assets/logo-atem-preferencial.png" alt="ATEM"></div>
+        <div class="auth-copy">
+          <p class="eyebrow">ESTOQUE MARKETING & COMERCIAL</p>
+          <h1>Entrar</h1>
+          <p>Use seu e-mail corporativo para acessar o controle online de materiais da ATEM.</p>
+        </div>
+        <form id="authCoverForm" class="auth-form">
+          <label>E-mail</label>
+          <input required type="email" name="email" autocomplete="email" placeholder="seu.email@atem.com.br">
+          <label>Senha</label>
+          <input required type="password" name="password" autocomplete="current-password" placeholder="Sua senha">
+          <button class="btn btn-primary">Entrar para sincronizar</button>
+          <small>Dados sincronizados entre desktop, celular e equipe.</small>
+        </form>
+      </div>
+      <div class="auth-cover-right">
+        <div class="auth-hero-content">
+          <span class="auth-pill">Go-live oficial</span>
+          <h2>Gestão visual, rastreável e em tempo real.</h2>
+          <p>Entradas, saídas, alertas e histórico em um único painel.</p>
+          <div class="auth-mockup">
+            <div class="mock-top"></div>
+            <div class="mock-grid"><span></span><span></span><span></span></div>
+            <div class="mock-chart"><i></i><i></i><i></i><i></i></div>
+            <div class="mock-row"></div>
+            <div class="mock-row short"></div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.querySelector('#authCoverForm').onsubmit = async event => {
+      event.preventDefault();
+      const data = Object.fromEntries(new FormData(event.target));
+      try {
+        await cloud().signIn(data.email, data.password);
+        await startCloud();
+        toast('Sincronização online ativada.');
+      } catch (error) {
+        toast(error.message);
+      }
+    };
+  }
+
   function renderCloudStatus() {
     let box = document.querySelector('#cloudStatus');
     if (!box) {
@@ -35,6 +112,8 @@
       mobileBox.className = 'mobile-cloud-status';
       document.querySelector('.topbar')?.insertAdjacentElement('afterend', mobileBox);
     }
+
+    renderAuthCover();
 
     if (!cloud()) {
       box.innerHTML = '<span class="offline-dot"></span><span>Modo local</span>';
