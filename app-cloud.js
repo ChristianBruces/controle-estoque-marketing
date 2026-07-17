@@ -393,6 +393,168 @@
     }
   };
 
+  function normalizeHeader(value) {
+    return String(value || '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-zA-Z0-9]/g, '')
+      .toUpperCase();
+  }
+
+  function parseCsvLine(line, separator) {
+    const cells = [];
+    let current = '';
+    let quoted = false;
+
+    for (let index = 0; index < line.length; index++) {
+      const char = line[index];
+      const next = line[index + 1];
+
+      if (char === '"' && quoted && next === '"') {
+        current += '"';
+        index++;
+      } else if (char === '"') {
+        quoted = !quoted;
+      } else if (char === separator && !quoted) {
+        cells.push(current.trim());
+        current = '';
+      } else {
+        current += char;
+      }
+    }
+
+    cells.push(current.trim());
+    return cells;
+  }
+
+  function parseInventoryCsv(text) {
+    const clean = String(text || '').replace(/^\uFEFF/, '');
+    const lines = clean.split(/\r?\n/).filter(line => line.trim());
+    if (lines.length < 2) throw new Error('A planilha precisa ter cabeçalho e pelo menos uma linha de item.');
+
+    const separator = (lines[0].match(/;/g) || []).length >= (lines[0].match(/,/g) || []).length ? ';' : ',';
+    const headers = parseCsvLine(lines[0], separator).map(normalizeHeader);
+    const column = name => headers.indexOf(normalizeHeader(name));
+    const required = ['CODIGO', 'MATERIAL', 'CATEGORIA', 'AREA', 'SALDO'];
+    const missing = required.filter(name => column(name) < 0);
+    if (missing.length) throw new Error(`Colunas obrigatórias ausentes: ${missing.join(', ')}.`);
+
+    return lines.slice(1).map((line, index) => {
+      const cells = parseCsvLine(line, separator);
+      const get = name => cells[column(name)]?.trim() || '';
+      const stock = Number(String(get('SALDO')).replace(/\./g, '').replace(',', '.')) || 0;
+      const status = get('STATUS').toLowerCase();
+      const minimum = status.includes('cr') ? Math.max(stock, 1) : 0;
+      const attention = status.includes('aten') ? Math.max(stock, 1) : minimum;
+
+      return {
+        line: index + 2,
+        code: get('CODIGO').toUpperCase(),
+        name: get('MATERIAL'),
+        category: get('CATEGORIA') || 'Sem categoria',
+        area: get('AREA') || 'Marketing',
+        stock,
+        unit: get('UNIDADE') || 'un.',
+        location: get('LOCALIZACAO') || '',
+        observations: get('DESCRICAO') || '',
+        description: get('DESCRICAO') || '',
+        supplier: '',
+        campaign: '',
+        minimum,
+        attention
+      };
+    }).filter(row => row.code || row.name);
+  }
+
+  function validateImportRows(rows) {
+    const errors = [];
+    const seen = new Map();
+    const existingCodes = new Set(items.map(item => String(item.code || '').toUpperCase()));
+
+    rows.forEach(row => {
+      if (!row.code) errors.push(`Linha ${row.line}: código não informado.`);
+      if (!row.name) errors.push(`Linha ${row.line}: material não informado.`);
+      if (row.stock < 0) errors.push(`Linha ${row.line}: saldo não pode ser negativo.`);
+      if (seen.has(row.code)) errors.push(`Código duplicado na planilha: ${row.code} nas linhas ${seen.get(row.code)} e ${row.line}.`);
+      seen.set(row.code, row.line);
+      if (existingCodes.has(row.code)) errors.push(`Código ${row.code} já existe no sistema.`);
+    });
+
+    return errors;
+  }
+
+  async function importInventoryFile(file) {
+    if (!cloudMode) {
+      toast('Entre para sincronizar antes de importar a planilha.');
+      return;
+    }
+
+    if (!canManageItems()) {
+      toast('Seu perfil não tem permissão para importar materiais.');
+      return;
+    }
+
+    const text = await file.text();
+    const rows = parseInventoryCsv(text);
+    const errors = validateImportRows(rows);
+
+    if (errors.length) {
+      openModal(`
+        <div class="modal-content">
+          <h2>Revisar planilha</h2>
+          <p>Encontrei pontos que precisam ser corrigidos antes da importação.</p>
+          <div class="import-errors">${errors.slice(0, 12).map(error => `<div>${error}</div>`).join('')}${errors.length > 12 ? `<div>+ ${errors.length - 12} outros pontos.</div>` : ''}</div>
+          <div class="modal-actions"><button class="btn btn-primary" id="cancelModal">Entendi</button></div>
+        </div>
+      `);
+      document.querySelector('#cancelModal').onclick = closeModal;
+      return;
+    }
+
+    openModal(`
+      <div class="modal-content">
+        <h2>Importar ${rows.length} materiais?</h2>
+        <p>O saldo informado será registrado como entrada inicial rastreável. Depois disso, entradas e saídas seguem pelo fluxo normal.</p>
+        <div class="import-summary">
+          <strong>${rows.length}</strong><span>itens válidos encontrados na planilha</span>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-light" id="cancelModal">Cancelar</button>
+          <button class="btn btn-primary" id="confirmImport">Confirmar importação</button>
+        </div>
+      </div>
+    `);
+
+    document.querySelector('#cancelModal').onclick = closeModal;
+    document.querySelector('#confirmImport').onclick = async () => {
+      const button = document.querySelector('#confirmImport');
+      button.disabled = true;
+      button.textContent = 'Importando...';
+      try {
+        for (const row of rows) {
+          await cloud().createItem(row);
+        }
+        await loadCloudData();
+        closeModal();
+        toast(`${rows.length} materiais importados com sucesso.`);
+      } catch (error) {
+        toast(error.message);
+        button.disabled = false;
+        button.textContent = 'Confirmar importação';
+      }
+    };
+  }
+
+  document.querySelector('#importItems')?.addEventListener('click', () => {
+    document.querySelector('#importItemsFile')?.click();
+  });
+
+  document.querySelector('#importItemsFile')?.addEventListener('change', event => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (file) importInventoryFile(file).catch(error => toast(error.message));
+  });
+
   window.addEventListener('load', () => {
     renderCloudStatus();
     renderProfile();
