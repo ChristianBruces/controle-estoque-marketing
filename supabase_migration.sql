@@ -339,7 +339,7 @@ as $$
 declare
   new_item_id uuid;
 begin
-  if not public.app_is_at_least('analyst') then
+  if not public.app_is_at_least('assistant') then
     raise exception 'Perfil sem permissão para cadastrar materiais.';
   end if;
 
@@ -396,7 +396,7 @@ security definer
 set search_path = public
 as $$
 begin
-  if not public.app_is_at_least('analyst') then
+  if not public.app_is_at_least('assistant') then
     raise exception 'Perfil sem permissão para editar materiais.';
   end if;
 

@@ -16,7 +16,7 @@
   const selectOptions = (values, selected = '') => values.map(value => `<option ${value === selected ? 'selected' : ''}>${value}</option>`).join('');
   const currentName = () => cloudProfile?.full_name || cloudSession?.user?.email || 'Christian Souza';
   const roleLabel = role => ({ assistant: 'Assistente', analyst: 'Analista', manager: 'Gestor' })[role] || 'Modo local';
-  const canManageItems = () => !cloudMode || ['analyst', 'manager'].includes(cloudProfile?.role);
+  const canManageItems = () => !cloudMode || ['assistant', 'analyst', 'manager'].includes(cloudProfile?.role);
   const canApprove = () => !cloudMode || cloudProfile?.role === 'manager';
 
   function renderAuthCover() {
