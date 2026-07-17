@@ -11,8 +11,8 @@
 
   const unique = values => [...new Set(values.filter(Boolean))].sort((a, b) => a.localeCompare(b, 'pt-BR'));
   const areas = () => unique([...items.map(item => item.area), 'Marketing', 'Comercial']);
-  const categories = () => unique([...items.map(item => item.category), 'Brindes', 'Materiais GrÃ¡ficos', 'Enxovais', 'Eventos']);
-  const campaigns = () => unique([...items.map(item => item.campaign), 'Acelera AÃ­', 'CombustÃ­vel do Bem', 'InauguraÃ§Ã£o de posto']);
+  const categories = () => unique([...items.map(item => item.category), 'Brindes', 'Materiais Gráficos', 'Enxovais', 'Eventos']);
+  const campaigns = () => unique([...items.map(item => item.campaign), 'Acelera Aí', 'Combustível do Bem', 'Inauguração de posto']);
   const selectOptions = (values, selected = '') => values.map(value => `<option ${value === selected ? 'selected' : ''}>${value}</option>`).join('');
   const currentName = () => cloudProfile?.full_name || cloudSession?.user?.email || 'Christian Souza';
   const roleLabel = role => ({ assistant: 'Assistente', analyst: 'Analista', manager: 'Gestor' })[role] || 'Modo local';
@@ -41,8 +41,8 @@
           <div class="auth-logo"><img src="assets/logo-atem-preferencial.png" alt="ATEM"></div>
           <div class="auth-copy">
             <p class="eyebrow">ESTOQUE MARKETING & COMERCIAL</p>
-            <h1>SincronizaÃ§Ã£o indisponÃ­vel</h1>
-            <p>NÃ£o foi possÃ­vel carregar a conexÃ£o online. Atualize a pÃ¡gina ou tente novamente em instantes.</p>
+            <h1>Sincronização indisponível</h1>
+            <p>Não foi possível carregar a conexão online. Atualize a página ou tente novamente em instantes.</p>
           </div>
         </div>
         <div class="auth-cover-right"></div>
@@ -83,7 +83,7 @@
       try {
         await cloud().signIn(data.email, data.password);
         await startCloud();
-        toast('SincronizaÃ§Ã£o online ativada.');
+        toast('Sincronização online ativada.');
       } catch (error) {
         toast(error.message);
       }
@@ -111,7 +111,7 @@
 
     if (!cloud()) {
       box.innerHTML = '<span class="offline-dot"></span><span>Modo local</span>';
-      mobileBox.innerHTML = '<div><strong>Modo local</strong><small>SincronizaÃ§Ã£o online indisponÃ­vel neste momento.</small></div>';
+      mobileBox.innerHTML = '<div><strong>Modo local</strong><small>Sincronização online indisponível neste momento.</small></div>';
       return;
     }
 
@@ -129,11 +129,11 @@
       return;
     }
 
-    box.innerHTML = `<span class="online-dot"></span><span>Online Â· ${roleLabel(cloudProfile?.role)}</span><button class="link-btn" id="cloudLogout">Sair</button>`;
+    box.innerHTML = `<span class="online-dot"></span><span>Online · ${roleLabel(cloudProfile?.role)}</span><button class="link-btn" id="cloudLogout">Sair</button>`;
     document.querySelector('#cloudLogout').onclick = signOut;
     mobileBox.innerHTML = `
       <div>
-        <strong>Online Ã‚Â· ${roleLabel(cloudProfile?.role)}</strong>
+        <strong>Online · ${roleLabel(cloudProfile?.role)}</strong>
         <small>${currentName()}</small>
       </div>
       <button class="btn btn-light" id="mobileCloudLogout">Sair</button>
@@ -173,7 +173,7 @@
         await cloud().signIn(data.email, data.password);
         closeModal();
         await startCloud();
-        toast('SincronizaÃ§Ã£o online ativada.');
+        toast('Sincronização online ativada.');
       } catch (error) {
         toast(error.message);
       }
@@ -212,7 +212,7 @@
       cloudMode = false;
       renderCloudStatus();
       renderProfile();
-      toast('Supabase ainda nÃ£o estÃ¡ pronto. Execute o arquivo supabase_migration.sql no SQL Editor.');
+      toast('Supabase ainda não está pronto. Execute o arquivo supabase_migration.sql no SQL Editor.');
     }
   }
 
@@ -226,7 +226,7 @@
     renderCloudStatus();
     renderProfile();
     renderAll();
-    toast('VocÃª saiu do modo online.');
+    toast('Você saiu do modo online.');
   }
 
   function buildItemOptions(selected = '') {
@@ -240,7 +240,7 @@
     }
 
     if (!canManageItems()) {
-      toast('Seu perfil pode consultar e movimentar, mas nÃ£o editar materiais.');
+      toast('Seu perfil pode consultar e movimentar, mas não editar materiais.');
       return;
     }
 
@@ -248,27 +248,27 @@
     openModal(`
       <div class="modal-content">
         <h2>${edit ? 'Editar material' : 'Novo material'}</h2>
-        <p>${edit ? 'Atualize o cadastro. O saldo online continua sendo calculado pelas movimentaÃ§Ãµes.' : 'Cadastre o item e registre o saldo inicial rastreÃ¡vel.'}</p>
+        <p>${edit ? 'Atualize o cadastro. O saldo online continua sendo calculado pelas movimentações.' : 'Cadastre o item e registre o saldo inicial rastreável.'}</p>
         <form id="itemForm">
           <div class="form-grid">
-            <div class="field"><label>CÃ³digo interno *</label><input required name="code" value="${item?.code || ''}" placeholder="Ex.: MKT-052"></div>
+            <div class="field"><label>Código interno *</label><input required name="code" value="${item?.code || ''}" placeholder="Ex.: MKT-052"></div>
             <div class="field"><label>Nome do item *</label><input required name="name" value="${item?.name || ''}" placeholder="Nome do material"></div>
             <div class="field"><label>Categoria *</label><select name="category">${selectOptions(categories(), item?.category)}</select></div>
-            <div class="field"><label>Ãrea responsÃ¡vel *</label><select name="area">${selectOptions(areas(), item?.area)}</select></div>
+            <div class="field"><label>Área responsável *</label><select name="area">${selectOptions(areas(), item?.area)}</select></div>
             <div class="field"><label>${edit ? 'Saldo atual' : 'Estoque inicial'}</label><input name="stock" type="number" min="0" ${edit ? 'readonly' : ''} value="${item?.stock || 0}"></div>
             <div class="field"><label>Unidade</label><select name="unit">${selectOptions(['un.', 'kit', 'caixa', 'pacote'], item?.unit || 'un.')}</select></div>
-            <div class="field"><label>MÃ­nimo crÃ­tico *</label><input required name="minimum" type="number" min="0" value="${item?.minimum || 0}"></div>
-            <div class="field"><label>Limite de atenÃ§Ã£o *</label><input required name="attention" type="number" min="0" value="${item?.attention || 0}"></div>
+            <div class="field"><label>Mínimo crítico *</label><input required name="minimum" type="number" min="0" value="${item?.minimum || 0}"></div>
+            <div class="field"><label>Limite de atenção *</label><input required name="attention" type="number" min="0" value="${item?.attention || 0}"></div>
             <div class="field"><label>Local</label><input name="location" value="${item?.location || ''}" placeholder="Ex.: A-01"></div>
             <div class="field"><label>Fornecedor</label><input name="supplier" value="${item?.supplier || ''}" placeholder="Fornecedor"></div>
             <div class="field full"><label>Campanha</label><select name="campaign"><option value="">Sem campanha</option>${selectOptions(campaigns(), item?.campaign)}</select></div>
             <div class="field full"><label>Foto do item (URL)</label><input name="photoUrl" value="${item?.photoUrl || ''}" placeholder="Cole o link da foto, se houver"></div>
-            <div class="field full"><label>ObservaÃ§Ãµes</label><textarea name="observations" placeholder="Detalhes importantes">${item?.observations || ''}</textarea></div>
+            <div class="field full"><label>Observações</label><textarea name="observations" placeholder="Detalhes importantes">${item?.observations || ''}</textarea></div>
           </div>
           <div class="modal-actions">
             ${edit && canApprove() ? '<button type="button" class="btn btn-danger" id="deleteItem">Excluir material</button>' : ''}
             <button type="button" class="btn btn-light" id="cancelModal">Cancelar</button>
-            <button class="btn btn-primary">${edit ? 'Salvar alteraÃ§Ãµes' : 'Cadastrar material'}</button>
+            <button class="btn btn-primary">${edit ? 'Salvar alterações' : 'Cadastrar material'}</button>
           </div>
         </form>
       </div>
@@ -294,7 +294,7 @@
       event.preventDefault();
       const data = Object.fromEntries(new FormData(event.target));
       if (Number(data.attention) < Number(data.minimum)) {
-        toast('O limite de atenÃ§Ã£o deve ser maior ou igual ao mÃ­nimo crÃ­tico.');
+        toast('O limite de atenção deve ser maior ou igual ao mínimo crítico.');
         return;
       }
 
@@ -323,9 +323,9 @@
 
     const labels = {
       entry: ['Registrar entrada', 'Recebimento de materiais', 'Quantidade recebida'],
-      exit: ['Registrar saÃ­da', 'Retirada de materiais', 'Quantidade retirada'],
-      transfer: ['Transferir Ã¡rea', 'Altera a Ã¡rea responsÃ¡vel sem mudar o saldo', ''],
-      adjust: ['Solicitar ajuste', 'O saldo sÃ³ serÃ¡ atualizado apÃ³s aprovaÃ§Ã£o do gestor', 'DiferenÃ§a encontrada']
+      exit: ['Registrar saída', 'Retirada de materiais', 'Quantidade retirada'],
+      transfer: ['Transferir área', 'Altera a área responsável sem mudar o saldo', ''],
+      adjust: ['Solicitar ajuste', 'O saldo só será atualizado após aprovação do gestor', 'Diferença encontrada']
     };
     const [title, description, qtyLabel] = labels[type];
 
@@ -337,16 +337,16 @@
           <div class="form-grid">
             <div class="field full"><label>Material *</label><select name="itemId" required>${buildItemOptions()}</select></div>
             ${type === 'transfer'
-              ? `<div class="field full"><label>Nova Ã¡rea responsÃ¡vel *</label><select name="area">${selectOptions(areas())}</select></div>`
+              ? `<div class="field full"><label>Nova área responsável *</label><select name="area">${selectOptions(areas())}</select></div>`
               : `<div class="field"><label>${qtyLabel} *</label><input name="quantity" type="number" ${type === 'adjust' ? '' : 'min="1"'} required placeholder="0"></div><div class="field"><label>Data</label><input name="date" type="datetime-local" value="${new Date().toISOString().slice(0, 16)}"></div>`
             }
-            <div class="field"><label>${type === 'exit' ? 'Solicitante' : 'ResponsÃ¡vel'}</label><input name="requester" placeholder="Nome do responsÃ¡vel"></div>
+            <div class="field"><label>${type === 'exit' ? 'Solicitante' : 'Responsável'}</label><input name="requester" placeholder="Nome do responsável"></div>
             <div class="field"><label>Campanha</label><select name="campaign"><option value="">Sem campanha</option>${selectOptions(campaigns())}</select></div>
-            <div class="field full"><label>${type === 'entry' ? 'Nota fiscal / fornecedor' : type === 'exit' ? 'Motivo / unidade solicitante' : 'ObservaÃ§Ãµes'}</label><textarea name="detail" placeholder="Inclua detalhes para a rastreabilidade"></textarea></div>
+            <div class="field full"><label>${type === 'entry' ? 'Nota fiscal / fornecedor' : type === 'exit' ? 'Motivo / unidade solicitante' : 'Observações'}</label><textarea name="detail" placeholder="Inclua detalhes para a rastreabilidade"></textarea></div>
           </div>
           <div class="modal-actions">
             <button type="button" class="btn btn-light" id="cancelModal">Cancelar</button>
-            <button class="btn btn-primary">${type === 'adjust' ? 'Enviar para aprovaÃ§Ã£o' : 'Confirmar movimentaÃ§Ã£o'}</button>
+            <button class="btn btn-primary">${type === 'adjust' ? 'Enviar para aprovação' : 'Confirmar movimentação'}</button>
           </div>
         </form>
       </div>
@@ -360,7 +360,7 @@
       const quantity = Number(data.quantity || 0);
 
       if (type === 'exit' && quantity > item.stock) {
-        toast(`Saldo insuficiente: hÃ¡ apenas ${item.stock} ${item.unit} disponÃ­veis.`);
+        toast(`Saldo insuficiente: há apenas ${item.stock} ${item.unit} disponíveis.`);
         return;
       }
 
@@ -368,7 +368,7 @@
         await cloud().registerMovement(type, { ...data, itemId: item.id, quantity });
         await loadCloudData();
         closeModal();
-        toast(type === 'adjust' ? 'Ajuste enviado para aprovaÃ§Ã£o.' : 'MovimentaÃ§Ã£o sincronizada.');
+        toast(type === 'adjust' ? 'Ajuste enviado para aprovação.' : 'Movimentação sincronizada.');
       } catch (error) {
         toast(error.message);
       }
@@ -377,13 +377,47 @@
 
   renderInventory = function () {
     originalRenderInventory();
+    if (cloudMode && canApprove()) {
+      document.querySelectorAll('[data-edit-item]').forEach(button => {
+        const itemId = button.dataset.editItem;
+        if (!itemId || button.parentElement.querySelector('[data-delete-item]')) return;
+        button.insertAdjacentHTML('afterend', `<button class="table-action danger-action" data-delete-item="${itemId}" title="Excluir material">🗑</button>`);
+      });
+    }
     if (!canManageItems()) {
       document.querySelectorAll('[data-edit-item]').forEach(button => {
         button.disabled = true;
-        button.title = 'Perfil sem permissÃ£o para editar';
+        button.title = 'Perfil sem permissão para editar';
       });
     }
   };
+
+  document.querySelector('#inventoryTable')?.addEventListener('click', async event => {
+    const deleteButton = event.target.closest('[data-delete-item]');
+    if (!deleteButton || !cloudMode) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (!canApprove()) {
+      toast('Apenas gestores podem excluir materiais.');
+      return;
+    }
+
+    const item = getItem(deleteButton.dataset.deleteItem);
+    if (!item) return;
+
+    const confirmed = window.confirm(`Excluir o material "${item.name}"?\n\nEsta ação remove o cadastro e as movimentações vinculadas a ele. Use apenas para itens duplicados ou cadastrados por engano.`);
+    if (!confirmed) return;
+
+    try {
+      await cloud().deleteItem(item.id);
+      await loadCloudData();
+      toast('Material excluído online.');
+    } catch (error) {
+      toast(error.message);
+    }
+  }, true);
 
   document.querySelector('#movementTable').onclick = async event => {
     if (!cloudMode) {
