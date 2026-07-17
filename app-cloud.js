@@ -266,6 +266,7 @@
             <div class="field full"><label>ObservaÃ§Ãµes</label><textarea name="observations" placeholder="Detalhes importantes">${item?.observations || ''}</textarea></div>
           </div>
           <div class="modal-actions">
+            ${edit && canApprove() ? '<button type="button" class="btn btn-danger" id="deleteItem">Excluir material</button>' : ''}
             <button type="button" class="btn btn-light" id="cancelModal">Cancelar</button>
             <button class="btn btn-primary">${edit ? 'Salvar alteraÃ§Ãµes' : 'Cadastrar material'}</button>
           </div>
@@ -274,6 +275,21 @@
     `);
 
     document.querySelector('#cancelModal').onclick = closeModal;
+    if (edit && canApprove()) {
+      document.querySelector('#deleteItem').onclick = async () => {
+        const confirmed = window.confirm(`Excluir o material "${item.name}"?\n\nEsta ação remove o cadastro e as movimentações vinculadas a ele. Use apenas para itens duplicados ou cadastrados por engano.`);
+        if (!confirmed) return;
+
+        try {
+          await cloud().deleteItem(item.id);
+          await loadCloudData();
+          closeModal();
+          toast('Material excluído online.');
+        } catch (error) {
+          toast(error.message);
+        }
+      };
+    }
     document.querySelector('#itemForm').onsubmit = async event => {
       event.preventDefault();
       const data = Object.fromEntries(new FormData(event.target));

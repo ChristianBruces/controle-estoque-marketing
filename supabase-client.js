@@ -121,6 +121,12 @@
       }), 'Erro ao atualizar material.');
     },
 
+    async deleteItem(id) {
+      return requireOk(await client.rpc('app_delete_item', {
+        p_item_id: id
+      }), 'Erro ao excluir material.');
+    },
+
     async registerMovement(type, payload) {
       return requireOk(await client.rpc('app_register_movement', {
         p_type: type,

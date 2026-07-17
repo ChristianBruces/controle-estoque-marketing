@@ -419,6 +419,29 @@ begin
 end;
 $$;
 
+create or replace function public.app_delete_item(p_item_id uuid)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if not public.app_is_at_least('manager') then
+    raise exception 'Apenas gestores podem excluir materiais.';
+  end if;
+
+  if not exists (select 1 from public.items where id = p_item_id) then
+    raise exception 'Material não encontrado.';
+  end if;
+
+  delete from public.movements
+  where item_id = p_item_id;
+
+  delete from public.items
+  where id = p_item_id;
+end;
+$$;
+
 create or replace function public.app_register_movement(
   p_type movement_type,
   p_item_id uuid,
@@ -592,5 +615,6 @@ grant select on public.inventory_movements to authenticated;
 grant select on public.profiles, public.departments, public.categories, public.campaigns, public.suppliers, public.items, public.movements to authenticated;
 grant execute on function public.app_create_item(text,text,text,text,text,text,integer,integer,integer,text,text,text,text,text) to authenticated;
 grant execute on function public.app_update_item(uuid,text,text,text,text,text,text,integer,integer,text,text,text,text,text) to authenticated;
+grant execute on function public.app_delete_item(uuid) to authenticated;
 grant execute on function public.app_register_movement(movement_type,uuid,integer,text,text,text,text) to authenticated;
 grant execute on function public.app_approve_movement(uuid,boolean) to authenticated;
