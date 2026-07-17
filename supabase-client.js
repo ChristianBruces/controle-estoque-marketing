@@ -70,10 +70,14 @@
     },
 
     async loadData() {
+      const { data: userData } = await client.auth.getUser();
+      const userId = userData.user?.id;
       const [itemsResult, movementsResult, profileResult] = await Promise.all([
         client.from('inventory_items').select('*').order('name'),
         client.from('inventory_movements').select('*').order('created_at', { ascending: false }).limit(500),
-        client.from('profiles').select('full_name,role').maybeSingle()
+        userId
+          ? client.from('profiles').select('full_name,role').eq('id', userId).maybeSingle()
+          : Promise.resolve({ data: null, error: null })
       ]);
 
       return {
